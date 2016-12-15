@@ -1,6 +1,6 @@
 /**
  * The solution to tracking page views and events in a SPA with AngularJS
- * @version v0.4.0 - 2015-11-30
+ * @version v0.4.1 - 2016-12-15
  * @link https://github.com/mgonto/angularytics
  * @author Martin Gontovnikas <martin@gonto.com.ar>
  * @license MIT License, http://www.opensource.org/licenses/MIT
@@ -74,6 +74,28 @@
             service.trackPageView($location.url());
           });
         }
+        //addons for ecommerce order tracking
+        service.trackEcommerceTrans = function (transactionID, affiliation, total, tax, shipping, city, state, country, currency) {
+          forEachHandlerDo(function (handler) {
+            if (transactionID) {
+              handler.trackEcommerceTrans(transactionID, affiliation, total, tax, shipping, city, state, country, currency);
+            }
+          });
+        };
+        //addons for ecommerce item tracking
+        service.trackEcommerceItem = function (transactionID, sku, name, category, price, quantity, currency) {
+          forEachHandlerDo(function (handler) {
+            if (transactionID) {
+              handler.trackEcommerceItem(transactionID, sku, name, category, price, quantity, currency);
+            }
+          });
+        };
+        //addons for ecommerce item tracking
+        service.pushTransaction = function () {
+          forEachHandlerDo(function (handler) {
+            handler.pushTransaction();
+          });
+        };
         return service;
       }
     ];
@@ -92,6 +114,18 @@
       };
       service.trackTiming = function (category, variable, value, opt_label) {
         $log.log('Timing tracked', category, variable, value, opt_label);
+      };
+      //addons for ecommerce order tracking
+      service.trackEcommerceTrans = function (transactionID, affiliation, total, tax, shipping, city, state, country, currency) {
+        $log.log('Transaction tracked', transactionID, affiliation, total, tax, shipping, city, state, country, currency);
+      };
+      //addons for ecommerce item tracking
+      service.trackEcommerceItem = function (transactionID, sku, name, category, price, quantity, currency) {
+        $log.log('Items tracked', transactionID, sku, name, category, price, quantity, currency);
+      };
+      //addons for ecommerce
+      service.pushTransaction = function () {
+        $log.log('Transaction pushed', 'Success!!');
       };
       return service;
     }
@@ -130,6 +164,36 @@
         opt_label
       ]);
     };
+    //addons for ecommerce tracking
+    service.trackEcommerceTrans = function (transactionID, affiliation, total, tax, shipping, city, state, country, currency) {
+      _gaq.push([
+        '_addTrans',
+        transactionID,
+        affiliation,
+        total,
+        tax,
+        shipping,
+        city,
+        state,
+        country,
+        currency
+      ]);
+    };
+    service.trackEcommerceItem = function (transactionID, sku, name, category, price, quantity, currency) {
+      _gaq.push([
+        '_addItem',
+        transactionID,
+        sku,
+        name,
+        category,
+        price,
+        quantity,
+        currency
+      ]);
+    };
+    service.pushTransaction = function () {
+      _gaq.push(['_trackTrans']);
+    };
     return service;
   }).factory('AngularyticsGoogleUniversalHandler', function () {
     var service = {};
@@ -142,6 +206,32 @@
     };
     service.trackTiming = function (category, variable, value, opt_label) {
       ga('send', 'timing', category, variable, value, opt_label);
+    };
+    service.trackEcommerceTrans = function (transactionID, affiliation, total, tax, shipping, city, state, country, currency) {
+      ga('require', 'ecommerce');
+      ga('ecommerce:addTransaction', {
+        'id': transactionID,
+        'affiliation': affiliation,
+        'revenue': total,
+        'shipping': shipping,
+        'tax': tax,
+        'currency': currency
+      });
+    };
+    service.trackEcommerceItem = function (transactionID, sku, name, category, price, quantity, currency) {
+      ga('require', 'ecommerce');
+      ga('ecommerce:addItem', {
+        'id': transactionID,
+        'name': name,
+        'sku': sku,
+        'category': category,
+        'price': price,
+        'quantity': quantity,
+        'currency': currency
+      });
+    };
+    service.pushTransaction = function () {
+      ga('ecommerce:send');
     };
     return service;
   }).factory('AngularyticsGoogleTagManagerHandler', function () {
