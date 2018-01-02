@@ -1,6 +1,6 @@
 /**
  * The solution to tracking page views and events in a SPA with AngularJS
- * @version v0.4.1 - 2016-12-15
+ * @version v0.4.1 - 2018-01-02
  * @link https://github.com/mgonto/angularytics
  * @author Martin Gontovnikas <martin@gonto.com.ar>
  * @license MIT License, http://www.opensource.org/licenses/MIT
@@ -198,40 +198,58 @@
   }).factory('AngularyticsGoogleUniversalHandler', function () {
     var service = {};
     service.trackPageView = function (url) {
-      ga('set', 'page', url);
-      ga('send', 'pageview', url);
+      var trackers = ga.getAll ? ga.getAll() : [];
+      angular.forEach(trackers, function (tracker) {
+        ga(tracker.get('name') + '.set', 'page', url);
+        ga(tracker.get('name') + '.send', 'pageview', url);
+      });
     };
     service.trackEvent = function (category, action, opt_label, opt_value, opt_noninteraction) {
-      ga('send', 'event', category, action, opt_label, opt_value, { 'nonInteraction': opt_noninteraction });
+      var trackers = ga.getAll ? ga.getAll() : [];
+      angular.forEach(trackers, function (tracker) {
+        ga(tracker.get('name') + '.send', 'event', category, action, opt_label, opt_value, { 'nonInteraction': opt_noninteraction });
+      });
     };
     service.trackTiming = function (category, variable, value, opt_label) {
-      ga('send', 'timing', category, variable, value, opt_label);
+      var trackers = ga.getAll ? ga.getAll() : [];
+      angular.forEach(trackers, function (tracker) {
+        ga(tracker.get('name') + '.send', 'timing', category, variable, value, opt_label);
+      });
     };
     service.trackEcommerceTrans = function (transactionID, affiliation, total, tax, shipping, city, state, country, currency) {
-      ga('require', 'ecommerce');
-      ga('ecommerce:addTransaction', {
-        'id': transactionID,
-        'affiliation': affiliation,
-        'revenue': total,
-        'shipping': shipping,
-        'tax': tax,
-        'currency': currency
+      var trackers = ga.getAll ? ga.getAll() : [];
+      angular.forEach(trackers, function (tracker) {
+        ga(tracker.get('name') + '.require', 'ecommerce');
+        ga(tracker.get('name') + '.ecommerce:addTransaction', {
+          'id': transactionID,
+          'affiliation': affiliation,
+          'revenue': total,
+          'shipping': shipping,
+          'tax': tax,
+          'currency': currency
+        });
       });
     };
     service.trackEcommerceItem = function (transactionID, sku, name, category, price, quantity, currency) {
-      ga('require', 'ecommerce');
-      ga('ecommerce:addItem', {
-        'id': transactionID,
-        'name': name,
-        'sku': sku,
-        'category': category,
-        'price': price,
-        'quantity': quantity,
-        'currency': currency
+      var trackers = ga.getAll ? ga.getAll() : [];
+      angular.forEach(trackers, function (tracker) {
+        ga(tracker.get('name') + '.require', 'ecommerce');
+        ga(tracker.get('name') + '.ecommerce:addItem', {
+          'id': transactionID,
+          'name': name,
+          'sku': sku,
+          'category': category,
+          'price': price,
+          'quantity': quantity,
+          'currency': currency
+        });
       });
     };
     service.pushTransaction = function () {
-      ga('ecommerce:send');
+      var trackers = ga.getAll ? ga.getAll() : [];
+      angular.forEach(trackers, function (tracker) {
+        ga(tracker.get('name') + '.ecommerce:send');
+      });
     };
     return service;
   }).factory('AngularyticsGoogleTagManagerHandler', function () {
